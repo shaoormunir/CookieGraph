@@ -21,8 +21,10 @@ def build_networkx_graph(pdf):
     4. Updates node attributes in graph.
     """
 
-    df_nodes = pdf[(pdf["graph_attr"] == "Node") | (pdf["graph_attr"] == "NodeWG")]
-    df_edges = pdf[(pdf["graph_attr"] == "Edge") | (pdf["graph_attr"] == "EdgeWG")]
+    df_nodes = pdf[(pdf["graph_attr"] == "Node") |
+                   (pdf["graph_attr"] == "NodeWG")]
+    df_edges = pdf[(pdf["graph_attr"] == "Edge") |
+                   (pdf["graph_attr"] == "EdgeWG")]
     df_nodes = df_nodes.groupby(
         ['visit_id', 'name'],
         as_index=False
@@ -30,8 +32,8 @@ def build_networkx_graph(pdf):
         {
             'type': lambda x: list(x),
             'attr': lambda x: list(x),
-            'domain' : lambda x: list(x)[0],
-            'top_level_domain' : lambda x: list(x)[0]
+            'domain': lambda x: list(x)[0],
+            'top_level_domain': lambda x: list(x)[0]
         }
     )
 
@@ -49,21 +51,38 @@ def build_networkx_graph(pdf):
             new_type = "Element"
         return new_type
 
-
     def modify_attr(orig_attr):
+        """
+        Function to process attributes of a node in a better format.
+
+        Args:
+            orig_attr: Original attribute.
+        Returns:
+            new_attr: New attribute.
+
+        This functions does the following:
+
+        1. Processes the original attribute.
+        """
+        new_attr = {}
         orig_attr = np.array(list(set(orig_attr)))
-        if len(orig_attr) == 1:
-            return orig_attr[0]
+        if 'Cookie' in orig_attr:
+            return 'Cookie'
+        if 'HTTPCookie' in orig_attr:
+            return 'HTTPCookie'
 
         for item in orig_attr:
-            if item and 'top_level_url' in item:
-                return json.loads(item)
-        return ""
-
+            try:
+                d = json.loads(item)
+                new_attr.update(d)
+            except:
+                continue
+        return json.dumps(new_attr)
 
     df_nodes['type'] = df_nodes['type'].apply(modify_type)
     df_nodes['attr'] = df_nodes['attr'].apply(modify_attr)
-    networkx_graph = nx.from_pandas_edgelist(df_edges, source='src', target='dst', edge_attr=True, create_using=nx.DiGraph())
+    networkx_graph = nx.from_pandas_edgelist(
+        df_edges, source='src', target='dst', edge_attr=True, create_using=nx.DiGraph())
     node_dict = df_nodes.set_index('name').to_dict("index")
     nx.set_node_attributes(networkx_graph, node_dict)
 

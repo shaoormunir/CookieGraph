@@ -131,16 +131,12 @@ def build_graph(database: Database, visit_id: str) -> pd.DataFrame:
 
     # extract nodes and edges from all categories of interest as described in the paper
     df_js_nodes, df_js_edges = gs.build_html_components(javascript)
-    df_request_nodes, df_request_edges = gs.build_request_components(df_requests, df_responses, df_redirects, call_stacks, is_webgraph)
+    df_request_nodes, df_request_edges = gs.build_request_components(df_requests, df_responses, df_redirects, call_stacks)
 
-    # if is_webgraph:
     df_all_storage_nodes, df_all_storage_edges = gs.build_storage_components(javascript)
     df_http_cookie_nodes, df_http_cookie_edges = gs.build_http_cookie_components(df_request_edges, df_request_nodes)
     df_storage_node_setter = find_setters(df_all_storage_nodes, df_http_cookie_nodes, df_all_storage_edges, df_http_cookie_edges)
-    # else:
-    #     df_all_storage_edges = pd.DataFrame()
-    #     df_http_cookie_edges = pd.DataFrame()
-    #     df_storage_node_setter = find_setters(pd.DataFrame(), pd.DataFrame(), pd.DataFrame(), pd.DataFrame())
+
 
     # Concatenate to get all nodes and edges
     df_request_nodes['domain'] = None
@@ -155,6 +151,13 @@ def build_graph(database: Database, visit_id: str) -> pd.DataFrame:
     df_all_edges = df_all_edges.drop_duplicates()
     df_all_edges['top_level_domain'] = df_all_edges['top_level_url'].apply(find_tld)
     df_all_edges['graph_attr'] = "Edge"
+
+    #Remove all non-FP cookies 
+    df_all_nodes['party'] = df_all_nodes.apply(get_party, axis=1)
+    third_parties = df_all_nodes[df_all_nodes['party'] == 'third']['name'].unique()
+    df_all_nodes = df_all_nodes[~df_all_nodes['name'].isin(third_parties)]
+    df_all_edges = df_all_edges[~df_all_edges['dst'].isin(third_parties)]
+    df_all_edges = df_all_edges[~df_all_edges['src'].isin(third_parties)]
 
     df_all_graph = pd.concat([df_all_nodes, df_all_edges])
     df_all_graph = df_all_graph.astype(
@@ -247,6 +250,7 @@ def pipeline(db_file: Path, ldb_file: Path, features_file: Path, filterlist_dir:
     # setup and load files
     fs.download_lists(filterlist_dir, overwrite)
     filterlists, filterlist_rules = fs.create_filterlist_rules(filterlist_dir)
+
     config_info = load_config_info(features_file)
 
     # validate_config(config_info, mode) # not needed for now as we are not using adgraph mode
@@ -275,7 +279,10 @@ def pipeline(db_file: Path, ldb_file: Path, features_file: Path, filterlist_dir:
                 # build graph nodes and edges dataframe
                 pdf = build_graph(database, visit_id)
                 tqdm.write(str(pdf.shape))
+                end = time.time()
+                print("Built graph:", end - start)
 
+                pdf = pdf[pdf['top_level_domain'].notnull()]
                 # run the feature extraction tasks on the dataframe and node labeling
                 pdf.groupby(['visit_id', 'top_level_domain']).apply(apply_tasks, visit_id, config_info, ldb_file, output_dir, overwrite, filterlists, filterlist_rules)
                 end = time.time()
