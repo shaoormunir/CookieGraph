@@ -17,6 +17,16 @@ features_to_extract:
       - structure
       - dataflow
       #- additional
+
+exfil_features:
+      -visit_id
+      - src
+      - dst
+      - dst_domain
+      - attr
+      - time_stamp
+      - direction
+      -type
      
 graph_columns:
       - visit_id

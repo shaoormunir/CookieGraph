@@ -1,12 +1,15 @@
+import os
 import pandas as pd
 import networkx as nx
 from .dataflow import pre_extraction, get_dataflow_features
 from .structure import get_structure_features
 from .content import get_content_features
+from .additional import get_additional_features
+from utils import *
+
 
 def extract_graph_node_features(G, df_graph, G_indirect, df_indirect_graph, G_indirect_all,
-    node, dict_redirect, ldb, selected_features, vid):
-
+                                node, dict_redirect, ldb, selected_features, vid):
     """
     Function to extract features for a node of the graph.
 
@@ -24,7 +27,6 @@ def extract_graph_node_features(G, df_graph, G_indirect, df_indirect_graph, G_in
     Returns:
       df: DataFrame of features for the node.
     """
-    
 
     all_features = []
     all_feature_names = ['visit_id', 'name']
@@ -38,23 +40,30 @@ def extract_graph_node_features(G, df_graph, G_indirect, df_indirect_graph, G_in
     additional_feature_names = []
 
     if 'content' in selected_features:
-        content_features, content_feature_names = get_content_features(G, df_graph, node)
+        content_features, content_feature_names = get_content_features(
+            G, df_graph, node)
     if 'structure' in selected_features:
-        structure_features, structure_feature_names = get_structure_features(G, df_graph, node, ldb)
+        structure_features, structure_feature_names = get_structure_features(
+            G, df_graph, node, ldb)
     if 'dataflow' in selected_features:
-        dataflow_features, dataflow_feature_names = get_dataflow_features(G, df_graph, node, dict_redirect, G_indirect, G_indirect_all, df_indirect_graph)
+        dataflow_features, dataflow_feature_names = get_dataflow_features(
+            G, df_graph, node, dict_redirect, G_indirect, G_indirect_all, df_indirect_graph)
     if 'additional' in selected_features:
-        additional_features, additional_feature_names = get_additional_features(G, df_graph, node)
+        additional_features, additional_feature_names = get_additional_features(
+            G, df_graph, node)
 
-    all_features = content_features + structure_features + dataflow_features + additional_features
-    all_feature_names += content_feature_names + structure_feature_names + dataflow_feature_names + additional_feature_names
+    all_features = content_features + structure_features + \
+        dataflow_features + additional_features
+    all_feature_names += content_feature_names + structure_feature_names + \
+        dataflow_feature_names + additional_feature_names
 
-    df = pd.DataFrame([[vid] + [node] + all_features], columns=all_feature_names)
+    df = pd.DataFrame([[vid] + [node] + all_features],
+                      columns=all_feature_names)
 
     return df
 
-def extract_graph_features(df_graph, G, vid, ldb, feature_config):
 
+def extract_graph_features(df_graph, G, vid, ldb, feature_config):
     """
     Function to extract features.
 
@@ -81,13 +90,25 @@ def extract_graph_features(df_graph, G, vid, ldb, feature_config):
     df_indirect_graph = pd.DataFrame()
     dict_redirect = {}
 
+    df_graph['src_domain'] = df_graph['src'].apply(get_domain)
+    df_graph['dst_domain'] = df_graph['dst'].apply(get_domain)
+
     selected_features = feature_config['features_to_extract']
+    exfil_columns = feature_config['exfil_columns']
     if 'dataflow' in selected_features:
-        dict_redirect, G_indirect, G_indirect_all, df_indirect_graph = pre_extraction(G, df_graph)
+        G_indirect, G_indirect_all, df_indirect_graph = pre_extraction(
+            G, df_graph, ldb)
+
+    if not os.path.exists("exfils.csv"):
+        df_indirect_graph.reindex(columns=exfil_columns).to_csv("exfils.csv")
+        #df_indirect_graph.to_csv("exfils_" + str(tag) + ".csv")
+    else:
+        df_indirect_graph.reindex(columns=exfil_columns).to_csv(
+            "exfils.csv", mode='a', header=False)
 
     for node in nodes:
-        #Currently, we filter out Element and Storage nodes since we only want to classify URLs (the other nodes are used for feature calculation for these nodes though)
-        if ("type" in node[1]) and (node[1]["type"] != "Element") and (node[1]['attr'] != "inline") and (node[1]["type"] != "Storage"):
+        # Currently, we filter out Element and Storage nodes since we only want to classify URLs (the other nodes are used for feature calculation for these nodes though)
+        if ("type" in node[1]) and (node[1]["type"] == "Storage") and ('Cookie' in node[1]['attr']):
             df_feature = extract_graph_node_features(
                 G,
                 df_graph,
@@ -101,5 +122,5 @@ def extract_graph_features(df_graph, G, vid, ldb, feature_config):
                 vid
             )
             df_features = pd.concat([df_features, df_feature])
-    
+
     return df_features

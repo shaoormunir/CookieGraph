@@ -278,7 +278,7 @@ def get_dataflow_features(G, df_graph, node, dict_redirect, G_indirect, G_indire
 
   return all_features, all_feature_names
 
-def pre_extraction(G, df_graph):
+def pre_extraction(G, df_graph, ldb):
 
   """
   Function to obtain indirect edges before calculating dataflow features.
@@ -294,12 +294,15 @@ def pre_extraction(G, df_graph):
   """
 
   G_indirect = nx.DiGraph()
-  dict_redirect = get_redirect_depths(df_graph)
-  df_indirect_edges = find_indirect_edges(G, df_graph)
+
+  df_exfiltration = find_exfiltrations(df_graph, ldb)
+  # dict_redirect = get_redirect_depths(df_graph) # we are not using this in cookiegraph so removing for now
+  df_indirect_edges = df_exfiltration.reset_index()
+
 
   if len(df_indirect_edges) > 0:
      G_indirect = nx.from_pandas_edgelist(df_indirect_edges, source='src', target='dst', edge_attr=True, create_using=nx.DiGraph())
   G_indirect_all = nx.compose(G, G_indirect)
 
-  return dict_redirect, G_indirect, G_indirect_all, df_indirect_edges
+  return G_indirect, G_indirect_all, df_indirect_edges
 
