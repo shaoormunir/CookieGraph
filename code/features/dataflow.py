@@ -13,6 +13,38 @@ def find_common_name(name):
     return name
 
 
+def get_setter_features(df_graph, df_graph_indirect, node, setter_domain):
+
+    setter_exfil = 0
+    setter_redirects_sent = 0
+    setter_redirects_rec = 0
+
+    try:
+        setter_exfil = len(
+            df_graph_indirect[df_graph_indirect['dst_domain'] == setter_domain])
+
+        http_status = [300, 301, 302, 303, 307, 308]
+
+        setter_redirects_sent = len(df_graph[(df_graph['src_domain'] == setter_domain) & (
+            df_graph['response_status'].isin(http_status))])
+        setter_redirects_rec = len(df_graph[(df_graph['dst_domain'] == setter_domain) & (
+            df_graph['response_status'].isin(http_status))])
+
+        setter_features = [setter_exfil,
+                           setter_redirects_sent, setter_redirects_rec]
+        setter_feature_names = ['setter_exfil',
+                                'setter_redirects_sent', 'setter_redirects_rec']
+
+    except:
+        setter_features = [setter_exfil,
+                           setter_redirects_sent, setter_redirects_rec]
+        setter_feature_names = ['setter_exfil',
+                                'setter_redirects_sent', 'setter_redirects_rec']
+        return setter_features, setter_feature_names
+
+    return setter_features, setter_feature_names
+
+
 def get_storage_features(df_graph, node):
     """
     Function to extract storage features.
@@ -197,43 +229,67 @@ def get_indirect_features(G, df_graph, node):
     closeness_centrality = -1
     average_degree_connectivity = -1
     eccentricity = -1
-    mean_in_weights = -1
-    min_in_weights = -1
-    max_in_weights = -1
-    mean_out_weights = -1
-    min_out_weights = -1
-    max_out_weights = -1
-    num_set_get_src = 0
-    num_set_mod_src = 0
-    num_set_url_src = 0
-    num_get_url_src = 0
-    num_set_get_dst = 0
-    num_set_mod_dst = 0
-    num_set_url_dst = 0
-    num_get_url_dst = 0
+    num_exfil = 0
+    num_url_exfil = 0
+    num_header_exfil = 0
+    num_body_exfil = 0
+    num_cookieheader_exfil = 0
+    num_infil = 0
+    num_infil_content = 0
+    num_ls_exfil = 0
+    num_ls_url_exfil = 0
+    num_ls_header_exfil = 0
+    num_ls_body_exfil = 0
+    num_ls_cookieheader_exfil = 0
+    num_ls_infil = 0
+    num_ls_infil_content = 0
+    num_ls_src = 0
+    num_ls_dst = 0
 
     try:
         if len(df_graph) > 0:
-            num_set_get_src = len(
-                df_graph[(df_graph['type'] == 'set_get') & (df_graph['src'] == node)])
-            num_set_mod_src = len(
-                df_graph[(df_graph['type'] == 'set_modify') & (df_graph['src'] == node)])
-            num_set_url_src = len(
-                df_graph[(df_graph['type'] == 'set_url') & (df_graph['src'] == node)])
-            num_get_url_src = len(
-                df_graph[(df_graph['type'] == 'get_url') & (df_graph['src'] == node)])
-            num_set_get_dst = len(
-                df_graph[(df_graph['type'] == 'set_get') & (df_graph['dst'] == node)])
-            num_set_mod_dst = len(
-                df_graph[(df_graph['type'] == 'set_modify') & (df_graph['dst'] == node)])
-            num_set_url_dst = len(
-                df_graph[(df_graph['type'] == 'set_url') & (df_graph['dst'] == node)])
-            num_get_url_dst = len(
-                df_graph[(df_graph['type'] == 'get_url') & (df_graph['dst'] == node)])
+            num_exfil = len(df_graph[(df_graph['src'] == node) & (
+                df_graph['direction'] == 'out')])
+            num_infil = len(df_graph[(df_graph['src'] == node)
+                            & (df_graph['direction'] == 'in')])
+            num_infil_content = len(df_graph[(df_graph['src'] == node) & (
+                df_graph['direction'] == 'in') & (df_graph['type'] == 'content')])
+            num_url_exfil = len(df_graph[(df_graph['src'] == node) & (
+                df_graph['direction'] == 'out') & (df_graph['type'] == 'url')])
+            num_header_exfil = len(df_graph[(df_graph['src'] == node) & (
+                df_graph['direction'] == 'out') & (df_graph['type'] == 'header')])
+            num_body_exfil = len(df_graph[(df_graph['src'] == node) & (
+                df_graph['direction'] == 'out') & (df_graph['type'] == 'postbody')])
 
-        if (len(G.nodes()) > 0) and (node in G.nodes()):
+            node_ls_name = node + "|$$|LS"
+            ls_exfil = len(df_graph[(df_graph['src'] == node_ls_name) & (
+                df_graph['direction'] == 'out')])
+            ls_infil = len(df_graph[(df_graph['src'] == node_ls_name) & (
+                df_graph['direction'] == 'in')])
+            ls_infil_content = len(df_graph[(df_graph['src'] == node_ls_name) & (
+                df_graph['direction'] == 'in') & (df_graph['type'] == 'content')])
+            ls_url_exfil = len(df_graph[(df_graph['src'] == node_ls_name) & (
+                df_graph['direction'] == 'out') & (df_graph['type'] == 'url')])
+            ls_header_exfil = len(df_graph[(df_graph['src'] == node_ls_name) & (
+                df_graph['direction'] == 'out') & (df_graph['type'] == 'header')])
+            ls_body_exfil = len(df_graph[(df_graph['src'] == node_ls_name) & (
+                df_graph['direction'] == 'out') & (df_graph['type'] == 'postbody')])
+
+            num_ls_exfil = num_exfil + ls_exfil
+            num_ls_infil = num_infil + ls_infil
+            num_ls_infil_content = num_infil_content + ls_infil_content
+            num_ls_url_exfil = num_url_exfil + ls_url_exfil
+            num_ls_header_exfil = num_header_exfil + ls_header_exfil
+            num_ls_body_exfil = num_body_exfil + ls_body_exfil
+
+            num_ls_src = len(df_graph[(df_graph['src'] == node) & (
+                df_graph['direction'] == 'local')])
+            num_ls_dst = len(df_graph[(df_graph['dst'] == node) & (
+                df_graph['direction'] == 'local')])
+
+        if (len(G.nodes()) > 0) and node in G.nodes():
             in_degree = G.in_degree(node)
-            out_degree = G.in_degree(node)
+            out_degree = G.out_degree(node)
             ancestors = len(nx.ancestors(G, node))
             descendants = len(nx.descendants(G, node))
             closeness_centrality = nx.closeness_centrality(G, node)
@@ -244,34 +300,22 @@ def get_indirect_features(G, df_graph, node):
                 eccentricity = nx.eccentricity(H, node)
             except Exception as e:
                 eccentricity = -1
-            in_weights = df_graph[(df_graph['dst'] == node)]['attr'].tolist()
-            out_weights = df_graph[(df_graph['src'] == node)]['attr'].tolist()
 
-            if len(in_weights) > 0:
-                mean_in_weights = np.mean(in_weights)
-                min_in_weights = min(in_weights)
-                max_in_weights = max(in_weights)
-
-            if len(out_weights) > 0:
-                mean_out_weights = np.mean(out_weights)
-                min_out_weights = min(out_weights)
-                max_out_weights = max(out_weights)
     except Exception as e:
-        LOGGER.warning("[ get_indirect_features ] : ERROR - ", exc_info=True)
+        traceback.print_exc()
+        print(e)
 
     indirect_features = [in_degree, out_degree, ancestors, descendants, closeness_centrality,
-                         average_degree_connectivity, eccentricity, mean_in_weights,
-                         min_in_weights, max_in_weights, mean_out_weights, min_out_weights,
-                         max_out_weights, num_set_get_src, num_set_mod_src, num_set_url_src,
-                         num_get_url_src, num_set_get_dst, num_set_mod_dst, num_set_url_dst,
-                         num_get_url_dst]
+                         average_degree_connectivity, eccentricity, num_exfil, num_infil, num_infil_content, num_url_exfil,
+                         num_header_exfil, num_body_exfil, num_ls_exfil, num_ls_infil, num_ls_infil_content, num_ls_url_exfil,
+                         num_ls_header_exfil, num_ls_body_exfil,
+                         num_ls_src, num_ls_dst]
 
     indirect_feature_names = ['indirect_in_degree', 'indirect_out_degree', 'indirect_ancestors', 'indirect_descendants', 'indirect_closeness_centrality',
-                              'indirect_average_degree_connectivity', 'indirect_eccentricity', 'indirect_mean_in_weights',
-                              'indirect_min_in_weights', 'indirect_max_in_weights', 'indirect_mean_out_weights', 'indirect_min_out_weights',
-                              'indirect_max_out_weights', 'num_set_get_src', 'num_set_mod_src', 'num_set_url_src',
-                              'num_get_url_src', 'num_set_get_dst', 'num_set_mod_dst', 'num_set_url_dst',
-                              'num_get_url_dst']
+                              'indirect_average_degree_connectivity', 'indirect_eccentricity', 'num_exfil', 'num_infil', 'num_infil_content',
+                              'num_url_exfil', 'num_header_exfil', 'num_body_exfil', 'num_ls_exfil', 'num_ls_infil', 'num_ls_infil_content', 'num_ls_url_exfil',
+                              'num_ls_header_exfil', 'num_ls_body_exfil',
+                              'num_ls_src', 'num_ls_dst']
 
     return indirect_features, indirect_feature_names
 
@@ -359,10 +403,13 @@ def get_dataflow_features(G, df_graph, node, dict_redirect, G_indirect, G_indire
     indirect_all_features, indirect_all_feature_names = get_indirect_all_features(
         G_indirect_all, node)
 
+    setter_features, setter_feature_names = get_setter_features(
+        df_graph, df_indirect_graph, node, setter_domain)
+
     all_features = storage_features + rf_features + \
-        indirect_features + indirect_all_features
+        indirect_features + indirect_all_features + setter_features
     all_feature_names = storage_feature_names + rf_feature_names + \
-        indirect_feature_names + indirect_all_feature_names
+        indirect_feature_names + indirect_all_feature_names + setter_feature_names
 
     return all_features, all_feature_names
 
