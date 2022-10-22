@@ -212,7 +212,7 @@ def apply_tasks(df: pd.DataFrame, visit_id: int, config_info: dict , ldb_file: P
         LOGGER.info("Extracted features: %d", end-start)
 
         #Label data
-        df_labelled = ls.label_data(df, filterlists, filterlist_rules)
+        df_labelled = ls.label_data(df, filterlists, filterlist_rules, df.iloc[0]['top_level_url'])
         if len(df_labelled) > 0:
             labels_path = output_dir / "labelled.csv"
             if overwrite or not labels_path.is_file():
