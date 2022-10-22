@@ -1,6 +1,6 @@
-# WebGraph
+# CookieGraph
 
-Artifact release for the paper "WebGraph: Capturing Advertising and Tracking Information Flows for Robust Blocking", published at USENIX Security 2022.
+Artifact release for the paper "CookieGraph: Measuring and Countering use of First-Party Tracking Cookies".
 <hr/>
 
 ### Requirements
@@ -15,7 +15,7 @@ First, make sure you have `python3`, `binutils`, `pip`, `gcc `and `g++` installe
 apt-get install binutils python3-dev python3-pip gcc g++
 ```
 
-To run all tasks (Graph building, Feature extraction or Classification) on WebGraph, the crawl data used is collected using a custom version of [OpenWPM](https://github.com/sandrasiby/OpenWPM/tree/webgraph). Follow the instructions [here](https://github.com/sandrasiby/OpenWPM/tree/webgraph#readme) to setup OpenWPM in your environment. 
+To run all tasks (Graph building, Feature extraction or Classification) on CookieGraph, the crawl data used is collected using a custom version of [OpenWPM](https://github.com/sandrasiby/OpenWPM/tree/webgraph). Follow the instructions [here](https://github.com/sandrasiby/OpenWPM/tree/webgraph#readme) to setup OpenWPM in your environment. 
 
 After OpenWPM is installed, if you haven't done it yet, activate the  *conda*  environment: 
 
