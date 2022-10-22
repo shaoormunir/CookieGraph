@@ -303,7 +303,7 @@ def label_storage_nodes(df_setters, df_declared):
     return df_combined_data
 
 
-def label_cookiepedia_data(category):
+def label_cmp_data(category):
 
     if category >= 2:
         return True
@@ -311,20 +311,20 @@ def label_cookiepedia_data(category):
         return False
 
 
-def label_storage_cookiepedia(df, top_level_domain):
+# def label_storage_cookiepedia(df, top_level_domain):
 
-    df_storage = df[df['type'] == 'Storage']
-    # df_cookiepedia = process_declared_labels()
-    df_labels = pd.read_csv('labels.csv', index_col=0)
-    df_labels = df_labels[df_labels['domain'] == top_level_domain]
-    df_merged = df_storage.merge(
-        df_labels, on = 'name', how='outer')
-    df_merged = df_merged[['visit_id', 'name', 'category']]
-    df_merged = df_merged.drop_duplicates()
-    df_merged['cookiepedia_label'] = df_merged['category'].apply(
-        label_cookiepedia_data)
+#     df_storage = df[df['type'] == 'Storage']
+#     # df_cookiepedia = process_declared_labels()
+#     df_labels = pd.read_csv('labels.csv', index_col=0)
+#     df_labels = df_labels[df_labels['domain'] == top_level_domain]
+#     df_merged = df_storage.merge(
+#         df_labels, on = 'name', how='outer')
+#     df_merged = df_merged[['visit_id', 'name', 'category']]
+#     df_merged = df_merged.drop_duplicates()
+#     df_merged['cookiepedia_label'] = df_merged['category'].apply(
+#         label_cookiepedia_data)
 
-    return df_merged
+#     return df_merged
 
 
 
@@ -337,19 +337,22 @@ def label_data(df, filterlists, filterlist_rules, top_level_url):
 
     # labelling will be handled by a different pre-processing script
 
-    df_labels = pd.read_csv('labels.csv', index_col=0)
+    df_labels = pd.read_csv('cmp_labels.csv', index_col=0)
     top_level_domain = get_domain(top_level_url)
 
     df_labels = df_labels[df_labels['site'] == top_level_domain]
 
     try:
-        df_nodes = df[df['graph_attr'] == "Node"]
+        df_setters = label_storage_setters(df, filterlists, filterlist_rules)
+        df_nodes = df_setters[df['graph_attr'] == "Node"]
         df_nodes = df_nodes[df_nodes['type'] == 'Storage']
         df_labels = df_labels[df_labels['domain'] == top_level_domain]
         df_nodes  = df_nodes.merge(df_labels, on=['name'])
-        # df_labelled = label_nodes(df_nodes, filterlists, filterlist_rules)
-        df_nodes = df_nodes[['visit_id', 'name', 'top_level_url', 'label']]
+        df_nodes['label'] = df_nodes['category'].apply(label_cmp_data)
+        df_nodes.rename(columns={'label': 'declared_label'}, inplace=True)
+
     except Exception as e:
         LOGGER.warning("Error labelling:", exc_info=True)
+        df_nodes = pd.DataFrame()
 
     return df_nodes
