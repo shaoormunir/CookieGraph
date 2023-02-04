@@ -4,7 +4,7 @@ author: Shaoor Munir
 remote_theme: daattali/beautiful-jekyll@5.0.0
 
 navbar-links:
-  About Me: "aboutme"
+  Publication: /publication
   Resources:
     - Beautiful Jekyll: "https://beautifuljekyll.com"
     - Learn markdown: "https://www.markdowntutorial.com/"
@@ -13,3 +13,17 @@ navbar-links:
 plugins:
   - jekyll-paginate
   - jekyll-sitemap
+
+
+include:
+  - _pages
+
+defaults:
+  # _pages
+  - scope:
+      path: "_pages"
+      type: pages
+    values:
+      layout: minimal
+
+url-pretty: "shaoormunir.com"
