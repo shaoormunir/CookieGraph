@@ -5,7 +5,7 @@ remote_theme: daattali/beautiful-jekyll@5.0.0
 
 navbar-links:
   Source Code: "source"
-  Dataset: "dataset"
+  Dataset: "data"
   Author's home: "https://shaoormunir.com"
  
 plugins:
