@@ -1,6 +1,6 @@
 ---
-permalink: /about/
-layout: minimal
+permalink: /publication/
+layout: page
 title: "Publication Details"
 ---
 
