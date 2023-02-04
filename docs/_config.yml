@@ -1,1 +1,16 @@
+title: COOKIEGRAPH: Understanding and Detecting First-Party Tracking Cookies
+
+author: Shaoor Munir
+
 remote_theme: daattali/beautiful-jekyll@5.0.0
+
+navbar-links:
+  About Me: "aboutme"
+  Resources:
+    - Beautiful Jekyll: "https://beautifuljekyll.com"
+    - Learn markdown: "https://www.markdowntutorial.com/"
+  Author's home: "https://deanattali.com"
+ 
+plugins:
+  - jekyll-paginate
+  - jekyll-sitemap
