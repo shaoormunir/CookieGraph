@@ -14,7 +14,9 @@ The dataset is in the form of a JSON file. The structure of the JSON file is as 
 { 
   "https://www.example.com": {
     "cookie_key": {
-      "setter_script": "http://www.example.com/setter.js",
+      "setter_scripts": [
+        "http://www.example.com/setter1.js",
+        "http://www.example.com/setter2.js"],
       "exfiltration_endpoints": [
         "http://www.example.com/endpoint1",
         "http://www.example.com/endpoint2"
