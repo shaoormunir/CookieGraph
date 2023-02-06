@@ -25,3 +25,5 @@ The dataset is in the form of a JSON file. The structure of the JSON file is as 
   }
 }
 ```
+
+The raw JSON file containing the dataset can be found [here](https://raw.githubusercontent.com/shaoormunir/CookieGraph/main/data/dataset.json).
