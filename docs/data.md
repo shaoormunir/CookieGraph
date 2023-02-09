@@ -30,7 +30,7 @@ The raw JSON file containing the dataset can be found [here](https://raw.githubu
 
 ## Conversion to uBlock filterlist
 
-The script ```convert_to_ublock_filterlist.py```, found [here](https://raw.githubusercontent.com/shaoormunir/CookieGraph/main/data/convert_to_ublock_filiterlist.py), can be used to convert the dataset to a uBlock filterlist. The filterlist makes use of cookie-remover.js of uBlock to identify tracking cookies per site base. You can run the script using the following command:
+The script ```convert_to_ublock_filterlist.py```, found [here](https://raw.githubusercontent.com/shaoormunir/CookieGraph/main/data/convert_to_ublock_filterlist.py), can be used to convert the dataset to a uBlock filterlist. The filterlist makes use of cookie-remover.js of uBlock to identify tracking cookies per site base. You can run the script using the following command:
 
 ```SHELL
 python3 convert_to_ublock_filterlist.py -i input.json -o output.txt
