@@ -40,3 +40,4 @@ Each entry in the filterlist follows the following format:
 
 ```
 website-name##+js(cookie-remover.js, cookie_name)
+```
